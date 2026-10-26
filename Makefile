@@ -6,10 +6,10 @@ BUILD_DIR=bin
 LDFLAGS=-ldflags "-s -w -X main.version=$(VERSION)"
 
 build:
-	go build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/grepai
+	CGO_ENABLED=1 go build -tags treesitter $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/grepai
 
 install:
-	go install $(LDFLAGS) ./cmd/grepai
+	CGO_ENABLED=1 go install -tags treesitter $(LDFLAGS) ./cmd/grepai
 
 test:
 	go test -v -race ./...
