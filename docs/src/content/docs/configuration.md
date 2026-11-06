@@ -64,6 +64,7 @@ chunking:
   # custom_extensions:          # extra file extensions to index
   #   - .tengo
   #   - .prisma
+  # max_file_size_bytes: 5242880  # file size cap in bytes (default: 1 MB)
 
 framework_processing:           # pre-processing of framework single-file components
   enabled: true
@@ -285,7 +286,7 @@ See [Vector Stores](/grepai/backends/stores/) for detailed configuration options
 
 ## Ignoring Files
 
-grepai indexes files with a supported source extension (Go, Python, JavaScript/TypeScript, Java, C/C++, Rust, PHP, Ruby, Markdown and more). It skips binary files, minified files (such as `*.min.js`) and files larger than 1 MB. To index another extension, add it to `chunking.custom_extensions` (with the leading dot).
+grepai indexes files with a supported source extension (Go, Python, JavaScript/TypeScript, Java, C/C++, Rust, PHP, Ruby, Markdown and more). It skips binary files, minified files (such as `*.min.js`) and files larger than 1 MB. To index another extension, add it to `chunking.custom_extensions` (with the leading dot). To change the 1 MB size limit, set `chunking.max_file_size_bytes` (in bytes); the new limit applies to full scans and watcher updates after a re-index.
 
 To exclude files, grepai combines these sources:
 

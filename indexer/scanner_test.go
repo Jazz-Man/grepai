@@ -1,8 +1,10 @@
 package indexer
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 )
 
@@ -554,4 +556,107 @@ func TestScanner_CustomExtensions_BinaryStillSkipped(t *testing.T) {
 	if len(files) != 0 {
 		t.Errorf("expected binary .tengo to be skipped, got %+v", files)
 	}
+}
+
+func TestScanner_MaxFileSizeConfigurable(t *testing.T) {
+	tmpDir := t.TempDir()
+	// medium.go = 1.5 MB (over the default, under a 2 MB cap);
+	// large.go = 2.5 MB (over both).
+	if err := os.WriteFile(filepath.Join(tmpDir, "medium.go"), bytes.Repeat([]byte("a "), 768*1024), 0644); err != nil {
+		t.Fatalf("write medium.go: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, "large.go"), bytes.Repeat([]byte("b "), 1280*1024), 0644); err != nil {
+		t.Fatalf("write large.go: %v", err)
+	}
+
+	ignoreMatcher, err := NewIgnoreMatcher(tmpDir, []string{}, "")
+	if err != nil {
+		t.Fatalf("ignore matcher: %v", err)
+	}
+
+	contains := func(list []string, s string) bool {
+		return slices.Contains(list, s)
+	}
+	filePaths := func(files []FileInfo) []string {
+		paths := make([]string, len(files))
+		for i, f := range files {
+			paths[i] = f.Path
+		}
+		return paths
+	}
+
+	t.Run("default skips files over 1 MB", func(t *testing.T) {
+		files, _, err := NewScanner(tmpDir, ignoreMatcher).Scan()
+		if err != nil {
+			t.Fatalf("Scan: %v", err)
+		}
+		if len(files) != 0 {
+			t.Fatalf("expected no files with the default 1 MB limit, got %v", filePaths(files))
+		}
+	})
+
+	t.Run("custom limit applies to Scan", func(t *testing.T) {
+		files, skipped, err := NewScanner(tmpDir, ignoreMatcher).WithMaxFileSize(2 * 1024 * 1024).Scan()
+		if err != nil {
+			t.Fatalf("Scan: %v", err)
+		}
+		if !contains(filePaths(files), "medium.go") {
+			t.Error("expected medium.go (1.5 MB) indexed under a 2 MB limit")
+		}
+		if contains(filePaths(files), "large.go") {
+			t.Error("expected large.go (2.5 MB) skipped under a 2 MB limit")
+		}
+		if !contains(skipped, "large.go (too large)") {
+			t.Error("expected large.go reported as too large")
+		}
+	})
+
+	t.Run("custom limit applies to ScanFile", func(t *testing.T) {
+		// Default limit: the watcher path skips the oversized file.
+		fi, err := NewScanner(tmpDir, ignoreMatcher).ScanFile("medium.go")
+		if err != nil {
+			t.Fatalf("ScanFile: %v", err)
+		}
+		if fi != nil {
+			t.Error("expected medium.go skipped by ScanFile with the default limit")
+		}
+
+		fi, err = NewScanner(tmpDir, ignoreMatcher).WithMaxFileSize(2 * 1024 * 1024).ScanFile("medium.go")
+		if err != nil {
+			t.Fatalf("ScanFile: %v", err)
+		}
+		if fi == nil {
+			t.Fatal("expected medium.go returned by ScanFile under a 2 MB limit")
+		}
+
+		fi, err = NewScanner(tmpDir, ignoreMatcher).WithMaxFileSize(2 * 1024 * 1024).ScanFile("large.go")
+		if err != nil {
+			t.Fatalf("ScanFile: %v", err)
+		}
+		if fi != nil {
+			t.Error("expected large.go skipped by ScanFile under a 2 MB limit")
+		}
+	})
+
+	t.Run("custom limit applies to ScanMetadata", func(t *testing.T) {
+		metas, _, err := NewScanner(tmpDir, ignoreMatcher).WithMaxFileSize(2 * 1024 * 1024).ScanMetadata()
+		if err != nil {
+			t.Fatalf("ScanMetadata: %v", err)
+		}
+		if len(metas) != 1 || metas[0].Path != "medium.go" {
+			t.Fatalf("expected only medium.go in metadata, got %+v", metas)
+		}
+	})
+
+	t.Run("non-positive limit keeps the default", func(t *testing.T) {
+		files, _, err := NewScanner(tmpDir, ignoreMatcher).
+			WithMaxFileSize(0).
+			WithMaxFileSize(-1024).Scan()
+		if err != nil {
+			t.Fatalf("Scan: %v", err)
+		}
+		if len(files) != 0 {
+			t.Fatalf("expected non-positive limits ignored (default 1 MB), got %v", filePaths(files))
+		}
+	})
 }

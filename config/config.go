@@ -247,6 +247,9 @@ type ChunkingConfig struct {
 	// Binary detection (UTF-8 + null-byte check) still applies, so adding
 	// a binary extension here is safe.
 	CustomExtensions []string `yaml:"custom_extensions,omitempty"`
+	// MaxFileSizeBytes caps the size of files considered for indexing.
+	// Values <= 0 keep the scanner's built-in default of 1 MB.
+	MaxFileSizeBytes int64 `yaml:"max_file_size_bytes,omitempty"`
 }
 
 func DefaultStoreForBackend(backend string) StoreConfig {

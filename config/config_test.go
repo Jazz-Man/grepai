@@ -256,6 +256,39 @@ func TestConfigLoad_ChunkingStrategy(t *testing.T) {
 	}
 }
 
+func TestConfigLoad_ChunkingMaxFileSize(t *testing.T) {
+	tmpDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(tmpDir, ConfigDir), 0o755); err != nil {
+		t.Fatalf("mkdir config dir: %v", err)
+	}
+	cfgPath := GetConfigPath(tmpDir)
+
+	tests := []struct {
+		name string
+		yaml string
+		want int64
+	}{
+		{"absent keeps zero (scanner default)", "chunking:\n  size: 256\n", 0},
+		{"no chunking section keeps zero", "version: 1\n", 0},
+		{"value is preserved", "chunking:\n  max_file_size_bytes: 5242880\n", 5242880},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := os.WriteFile(cfgPath, []byte(tt.yaml), 0o644); err != nil {
+				t.Fatalf("write config: %v", err)
+			}
+			cfg, err := Load(tmpDir)
+			if err != nil {
+				t.Fatalf("Load failed: %v", err)
+			}
+			if cfg.Chunking.MaxFileSizeBytes != tt.want {
+				t.Fatalf("chunking.max_file_size_bytes = %d, want %d", cfg.Chunking.MaxFileSizeBytes, tt.want)
+			}
+		})
+	}
+}
+
 func TestConfigSaveAndLoad(t *testing.T) {
 	tmpDir := t.TempDir()
 

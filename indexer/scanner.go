@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	maxFileSize = 1 * 1024 * 1024 // 1 MB
+	defaultMaxFileSize = 1 * 1024 * 1024 // 1 MB
 )
 
 // MinifiedPatterns lists patterns for minified files to skip by default
@@ -119,13 +119,15 @@ type Scanner struct {
 	root         string
 	ignore       *IgnoreMatcher
 	extraExts    map[string]bool
+	maxFileSize  int64
 	scanFileCall atomic.Int64
 }
 
 func NewScanner(root string, ignore *IgnoreMatcher) *Scanner {
 	return &Scanner{
-		root:   root,
-		ignore: ignore,
+		root:        root,
+		ignore:      ignore,
+		maxFileSize: defaultMaxFileSize,
 	}
 }
 
@@ -143,6 +145,16 @@ func (s *Scanner) WithCustomExtensions(exts []string) *Scanner {
 			s.extraExts = make(map[string]bool)
 		}
 		s.extraExts[ext] = true
+	}
+	return s
+}
+
+// WithMaxFileSize returns the scanner with the given cap on the size of
+// files it will index. Values <= 0 are ignored, keeping the built-in
+// default of 1 MB.
+func (s *Scanner) WithMaxFileSize(size int64) *Scanner {
+	if size > 0 {
+		s.maxFileSize = size
 	}
 	return s
 }
@@ -206,7 +218,7 @@ func (s *Scanner) ScanMetadata() ([]FileMeta, []string, error) {
 		}
 
 		// Skip large files
-		if info.Size() > maxFileSize {
+		if info.Size() > s.maxFileSize {
 			skipped = append(skipped, relPath+" (too large)")
 			return nil
 		}
@@ -269,7 +281,7 @@ func (s *Scanner) Scan() ([]FileInfo, []string, error) {
 		}
 
 		// Skip large files
-		if info.Size() > maxFileSize {
+		if info.Size() > s.maxFileSize {
 			skipped = append(skipped, relPath+" (too large)")
 			return nil
 		}
@@ -323,7 +335,7 @@ func (s *Scanner) ScanFile(relPath string) (*FileInfo, error) {
 		return nil, err
 	}
 
-	if info.Size() > maxFileSize {
+	if info.Size() > s.maxFileSize {
 		return nil, nil // Skip large files
 	}
 
