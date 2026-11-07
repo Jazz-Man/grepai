@@ -35,7 +35,7 @@ You need:
 
 - Go 1.27.3 or later (the `go` directive in `go.mod`)
 - Git
-- Docker, for `make lint` (it runs golangci-lint in a container)
+- golangci-lint v2.15.0 or later, for `make lint`
 
 ```bash
 git clone https://github.com/yoanbernabeu/grepai.git
@@ -63,8 +63,7 @@ make build
 | `make test` | Run all tests with the race detector (`go test -v -race ./...`) |
 | `make test-cover` | Run tests and write `coverage.out` and `coverage.html` |
 | `make fmt` | Format all Go files with `gofmt -w .` |
-| `make lint` | Run golangci-lint v2.13.2 in Docker |
-| `make lint-local` | Run your locally installed `golangci-lint` |
+| `make lint` | Run the locally installed `golangci-lint` (v2.15.0 or later) |
 | `make pre-commit` | Format, vet, lint and test (see below) |
 | `make build-all` | Cross-compile for Linux, macOS and Windows into `bin/` |
 | `make docs-generate` | Regenerate the CLI reference pages in `docs/src/content/docs/commands/` |

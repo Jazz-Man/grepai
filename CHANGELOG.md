@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Building from source now requires Go 1.27.3 or later, up from 1.25.5. Installing a released binary is unaffected
+- `golangci-lint` is pinned to v2.15.0 in CI (release binaries built with Go 1.27), and `make lint` / `make pre-commit` now run the locally installed `golangci-lint` (v2.15.0 or later) instead of a Docker container; v2.13.2 could not read Go 1.27 export data
+
+### Removed
+
+- **Nix Package**: the Nix flake (`flake.nix`, `flake.lock`) and the `make nix-hash` helper were removed; this repository no longer provides a Nix install. Homebrew, the install scripts and the release binaries are unaffected
 
 ## [1.2.0] - 2026-10-30
 

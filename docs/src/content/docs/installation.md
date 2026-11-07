@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install grepai on macOS, Linux or Windows (Homebrew, install script, Nix or source), set up Ollama, and enable shell completion.
+description: Install grepai on macOS, Linux or Windows (Homebrew, install script or source), set up Ollama, and enable shell completion.
 ---
 
 This page shows how to install the `grepai` binary and an embedding provider. It takes a few minutes. When you are done, continue with the [Quick Start](/grepai/quickstart/).
@@ -54,18 +54,6 @@ irm https://raw.githubusercontent.com/yoanbernabeu/grepai/main/install.ps1 | iex
 ```
 
 The script installs `grepai.exe` to `%LOCALAPPDATA%\Programs\grepai` and adds that folder to your user `PATH`. It installs the `amd64` build. On Windows ARM, download the `windows_arm64` archive from [GitHub Releases](https://github.com/yoanbernabeu/grepai/releases).
-
-## Nix
-
-The repository provides a Nix flake:
-
-```bash
-# Run without installing
-nix run github:yoanbernabeu/grepai -- version
-
-# Install into your profile
-nix profile install github:yoanbernabeu/grepai
-```
 
 ## Install from Source
 
@@ -161,7 +149,7 @@ grepai update --force   # reinstall even if you are already up to date
 
 `grepai update` downloads the release archive for your platform from GitHub, verifies it against `checksums.txt`, and replaces the current binary. Restart any running `grepai watch` afterwards.
 
-If you installed with Nix or from source, update the same way you installed.
+If you installed from source, update the same way you installed.
 
 ## Next Steps
 

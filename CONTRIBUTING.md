@@ -28,7 +28,7 @@ Search the [existing issues](https://github.com/yoanbernabeu/grepai/issues?q=is%
 
 ## Building from source
 
-You need Go (the version in the `go` directive of `go.mod`), Git, and Docker for `make lint`.
+You need Go (the version in the `go` directive of `go.mod`), Git, and [golangci-lint](https://golangci-lint.run) v2.15.0 or later for `make lint`.
 
 ```bash
 git clone https://github.com/yoanbernabeu/grepai.git

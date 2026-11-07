@@ -1,4 +1,4 @@
-.PHONY: build install test clean lint run docs docs-generate docs-build docs-dev fmt pre-commit nix-hash
+.PHONY: build install test clean lint run docs docs-generate docs-build docs-dev fmt pre-commit
 
 BINARY_NAME=grepai
 VERSION?=0.1.0
@@ -23,9 +23,6 @@ clean:
 	rm -f coverage.out coverage.html
 
 lint:
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v2.13.2 golangci-lint run ./...
-
-lint-local:
 	golangci-lint run ./...
 
 run: build
@@ -64,13 +61,6 @@ fmt:
 # Pre-commit checks: format, vet, lint, and test
 pre-commit: fmt
 	go vet ./...
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v2.13.2 golangci-lint run ./...
+	golangci-lint run ./...
 	go test -race ./...
 	@echo "✓ All checks passed! Ready to commit."
-
-# Nix flake: compute vendorHash via Docker
-nix-hash:
-	@echo "Computing vendorHash (requires Docker)..."
-	@docker run --rm -v $(PWD):/src -w /src nixos/nix:latest sh -c \
-		'echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf && \
-		nix build .#grepai' 2>&1 | grep "got:" | sed 's/.*got:[[:space:]]*//'
