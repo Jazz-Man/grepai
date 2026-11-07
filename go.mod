@@ -1,6 +1,6 @@
 module github.com/yoanbernabeu/grepai
 
-go 1.25.5
+go 1.27.3
 
 require (
 	github.com/alpkeskin/gotoon v0.1.1

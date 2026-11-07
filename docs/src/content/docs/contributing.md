@@ -33,7 +33,7 @@ Search the [existing issues](https://github.com/yoanbernabeu/grepai/issues?q=is%
 
 You need:
 
-- Go 1.25.5 or later (the `go` directive in `go.mod`)
+- Go 1.27.3 or later (the `go` directive in `go.mod`)
 - Git
 - Docker, for `make lint` (it runs golangci-lint in a container)
 

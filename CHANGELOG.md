@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Configurable Max File Size**: new `chunking.max_file_size_bytes` option changes the 1 MB cap on indexed file size (e.g. for large generated sources). Values <= 0 keep the built-in 1 MB default; existing configs behave as before. The new limit applies to full scans and watcher updates after a re-index.
 
+### Changed
+
+- Building from source now requires Go 1.27.3 or later, up from 1.25.5. Installing a released binary is unaffected
+
 ## [1.2.0] - 2026-10-30
 
 This release only contains fixes, but two of them change behavior: read the **Security** migration if you use a custom embedding endpoint with an API key from the environment, and the Qdrant entry if you set `store.qdrant.collection`.

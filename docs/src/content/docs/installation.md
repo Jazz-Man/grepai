@@ -69,7 +69,7 @@ nix profile install github:yoanbernabeu/grepai
 
 ## Install from Source
 
-Requires **Go 1.25.5** or later (see `go.mod`).
+Requires **Go 1.27.3** or later (see `go.mod`).
 
 ```bash
 git clone https://github.com/yoanbernabeu/grepai.git
