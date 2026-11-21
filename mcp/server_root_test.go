@@ -114,6 +114,7 @@ func TestNewServer_advertises_tool_capabilities(t *testing.T) {
 							ListChanged bool `json:"listChanged"`
 						} `json:"tools"`
 					} `json:"capabilities"`
+					Instructions string `json:"instructions"`
 				} `json:"result"`
 			}
 			if err := json.Unmarshal(wire, &parsed); err != nil {
@@ -121,6 +122,14 @@ func TestNewServer_advertises_tool_capabilities(t *testing.T) {
 			}
 			if parsed.Result.Capabilities.Tools == nil {
 				t.Fatalf("expected tools capability in initialize response, got: %s", wire)
+			}
+			if parsed.Result.Instructions == "" {
+				t.Fatalf("expected non-empty server instructions in initialize response, got: %s", wire)
+			}
+			for _, key := range []string{"grepai_search", "grepai_trace_callers", "Fall back"} {
+				if !strings.Contains(parsed.Result.Instructions, key) {
+					t.Errorf("server instructions missing routing key %q", key)
+				}
 			}
 		})
 	}

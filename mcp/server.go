@@ -4,6 +4,7 @@ package mcp
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -123,6 +124,13 @@ func encodeOutput(data any, format string) (string, error) {
 	}
 }
 
+// serverInstructions is the doctrine sent to every MCP client in the
+// initialize response. It is embedded from instructions.md so the text can
+// be edited and re-tested without touching Go code.
+//
+//go:embed instructions.md
+var serverInstructions string
+
 // NewServer creates a new MCP server for grepai.
 func NewServer(projectRoot string) (*Server, error) {
 	s := &Server{
@@ -135,6 +143,7 @@ func NewServer(projectRoot string) (*Server, error) {
 		"grepai",
 		"1.0.0",
 		server.WithToolCapabilities(true),
+		server.WithInstructions(serverInstructions),
 	)
 
 	// Register tools
@@ -156,6 +165,7 @@ func NewServerWithWorkspace(projectRoot, workspaceName string) (*Server, error) 
 		"grepai",
 		"1.0.0",
 		server.WithToolCapabilities(true),
+		server.WithInstructions(serverInstructions),
 	)
 
 	s.registerTools()
