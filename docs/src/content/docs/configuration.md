@@ -334,7 +334,7 @@ chunking:
 - **`fixed`** (default): splits files into windows of `chunking.size` tokens, with `chunking.overlap` tokens shared between neighboring chunks.
 - **`ast`**: parses the file with tree-sitter and splits it along syntax boundaries (functions, classes, declarations) using the [cAST](https://arxiv.org/abs/2506.15655) algorithm. Small neighboring nodes are merged up to the size budget, and nodes larger than the budget are split into their children. A chunk is usually a whole function or a group of related declarations.
 
-With `ast`, `chunking.size` is still the budget, counted in non-whitespace characters (4 per token), and `chunking.overlap` is not used. Supported files are `.go`, `.py`, `.js`, `.jsx`, `.ts` and `.tsx`. Other files, and files nested too deeply to split, use the fixed chunker.
+With `ast`, `chunking.size` is still the budget, counted in non-whitespace characters (4 per token), and `chunking.overlap` is not used. Supported files are `.go`, `.py`, `.js`, `.jsx`, `.ts`, `.tsx` and `.zig`. Other files, and files nested too deeply to split, use the fixed chunker.
 
 > **Note:** `ast` requires a build with the `treesitter` build tag and CGO (`go build -tags treesitter ./cmd/grepai`). The prebuilt release binaries do not include it. Without it, or with an unknown strategy name, grepai logs a warning and uses `fixed`.
 

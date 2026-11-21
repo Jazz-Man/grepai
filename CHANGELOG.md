@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Configurable Max File Size**: new `chunking.max_file_size_bytes` option changes the 1 MB cap on indexed file size (e.g. for large generated sources). Values <= 0 keep the built-in 1 MB default; existing configs behave as before. The new limit applies to full scans and watcher updates after a re-index.
+- **Zig in AST Chunking**: `chunking.strategy: ast` now also splits `.zig` files along syntax boundaries (top-level `fn`, `test` and container declarations). The tree-sitter-zig grammar (tree-sitter-grammars/tree-sitter-zig v1.1.2, MIT) is vendored in `zig/` and matches the smacker runtime ABI. Requires a treesitter-tagged build and takes effect after a re-index; stock release binaries are unchanged
 
 ### Changed
 
