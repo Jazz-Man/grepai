@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Zig in AST Chunking**: `chunking.strategy: ast` now also splits `.zig` files along syntax boundaries (top-level `fn`, `test` and container declarations). The tree-sitter-zig grammar (tree-sitter-grammars/tree-sitter-zig v1.1.2, MIT) is vendored in `zig/` and matches the smacker runtime ABI. Requires a treesitter-tagged build and takes effect after a re-index; stock release binaries are unchanged
 - **Rust in AST Chunking**: `chunking.strategy: ast` now also splits `.rs` files along syntax boundaries (`fn`, `struct`, `impl`, modules). Uses the `rust` grammar already shipped by smacker/go-tree-sitter; no dependency change. Same constraints as the Zig entry: treesitter-tagged builds, re-index required
 - **AST Chunking for 21 More Languages**: the languages map now wires every grammar whose extension the scanner indexes: C (`.c`/`.h`), C++ (`.cpp`/`.cc`/`.cxx`/`.hpp`/`.hxx`), C# (`.cs`), CSS, Elixir (`.ex`/`.exs`), Elm, F# (`.fs`, via the grammar already vendored in `fsharp/`), HCL/Terraform (`.tf`/`.hcl`), HTML, Java, Kotlin, Lua, OCaml (`.ml`), PHP, Protobuf (`.proto`), Ruby, Scala, Shell (`.sh`/`.bash`/`.zsh`), SQL, Swift, TOML and YAML. All are subpackages of the already-required module (plus the vendored F#), so go.mod is unchanged; stock release binaries (CGO_ENABLED=0) are unaffected. Not covered: markdown (different API), svelte (handled by framework_processing), scss/less and other extensions without a grammar
+- **MCP Server Instructions**: the MCP server now sends usage doctrine in the initialize response (embedded from `mcp/instructions.md` via go:embed), so every client session receives the code-discovery routing rules — search before grep, trace for impact, RPG for feature orientation, empty-result semantics — without loading a skill or being told by the dispatcher
+- **Honest MCP Tool Descriptions**: tool descriptions now state how to interpret results instead of only what the tool does: bare-name matching and empty-on-miss for trace, JS/TS-only property refs, word-overlap (not semantic) matching and `node_id` provenance for RPG, callee-side reliability for trace_graph, and the `symbols_ready`/`rpg_enabled` gate fields for index_status. Contract tests pin these claims against the schemas and the instructions
+
+### Removed
+
+- **Dead `verbose` Parameter**: `grepai_index_status` no longer advertises a `verbose` parameter that the handler never read. Re-adding it as a working option remains upstream-compatible
 
 ### Changed
 

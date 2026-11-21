@@ -1,4 +1,4 @@
-.PHONY: build install test clean lint run docs docs-generate docs-build docs-dev fmt pre-commit
+.PHONY: build install test test-ast clean lint run docs docs-generate docs-build docs-dev fmt pre-commit
 
 BINARY_NAME=grepai
 VERSION?=0.1.0
@@ -13,6 +13,12 @@ install:
 
 test:
 	go test -v -race ./...
+
+# Treesitter-tagged tests (AST chunking, tree-sitter extractors, grammars).
+# Excluded from `make test` by the build tag; the first run compiles the
+# vendored grammars via cgo (minutes), subsequent runs hit the build cache.
+test-ast:
+	CGO_ENABLED=1 go test -v -race -tags treesitter ./...
 
 test-cover:
 	go test -v -race -coverprofile=coverage.out ./...
