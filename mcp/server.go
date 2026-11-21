@@ -187,7 +187,7 @@ func rootToolOption() mcp.ToolOption {
 func (s *Server) registerTools() {
 	// grepai_search tool
 	searchTool := mcp.NewTool("grepai_search",
-		mcp.WithDescription("Semantic code search. Search your codebase using natural language queries. Returns the most relevant code chunks with file paths, line numbers, and similarity scores.\n\nExamples:\n- whole workspace: workspace='acme', path='backend/src/' (path starts with the project name)\n- single project: workspace='acme', projects='backend', path='src/' (path relative to that project)"),
+		mcp.WithDescription("Semantic code search. Search your codebase using natural language queries. Returns the most relevant code chunks with file paths, line numbers, and similarity scores.\n\nExamples:\n- whole workspace: workspace='acme', path='backend/src/' (path starts with the project name)\n- single project: workspace='acme', projects='backend', path='src/' (path relative to that project)\n\nPrefer this over grep/rg for intent-shaped discovery (what/where/how); text grep only for exact strings, identifiers and literals."),
 		mcp.WithString("query",
 			mcp.Required(),
 			mcp.Description("Natural language search query (e.g., 'user authentication flow', 'error handling middleware')"),
@@ -216,7 +216,7 @@ func (s *Server) registerTools() {
 
 	// grepai_trace_callers tool
 	traceCallersTool := mcp.NewTool("grepai_trace_callers",
-		mcp.WithDescription("Find all functions that call the specified symbol. Useful for understanding code dependencies before modifying a function."),
+		mcp.WithDescription("Find all functions that call the specified symbol. Useful for understanding code dependencies before modifying a function.\n\nMatching is by bare symbol NAME only: same-named symbols in other files are indistinguishable. An empty result means no name matched, NOT 'no callers' — check the exact spelling and that the symbol index is built (grepai_index_status: symbols_ready)."),
 		mcp.WithString("symbol",
 			mcp.Required(),
 			mcp.Description("Name of the function/method to find callers for"),
@@ -239,7 +239,7 @@ func (s *Server) registerTools() {
 
 	// grepai_trace_callees tool
 	traceCalleesTool := mcp.NewTool("grepai_trace_callees",
-		mcp.WithDescription("Find all functions called by the specified symbol. Useful for understanding what a function depends on."),
+		mcp.WithDescription("Find all functions called by the specified symbol. Useful for understanding what a function depends on.\n\nMatching is by bare symbol NAME only: same-named symbols in other files are indistinguishable. An empty result means no name matched, NOT 'no callees' — check the exact spelling and that the symbol index is built (grepai_index_status: symbols_ready)."),
 		mcp.WithString("symbol",
 			mcp.Required(),
 			mcp.Description("Name of the function/method to find callees for"),
@@ -262,7 +262,7 @@ func (s *Server) registerTools() {
 
 	// grepai_trace_graph tool
 	traceGraphTool := mcp.NewTool("grepai_trace_graph",
-		mcp.WithDescription("Build a complete call graph around a symbol showing both callers and callees up to a specified depth."),
+		mcp.WithDescription("Call graph around a symbol up to the given depth. The callee side is reliable; caller edges are often missing and traversal truncates at name collisions — for a caller view prefer grepai_trace_callers. Bare-name matching and empty-on-miss semantics are the same as the other trace tools."),
 		mcp.WithString("symbol",
 			mcp.Required(),
 			mcp.Description("Name of the function/method to build graph for"),
@@ -284,7 +284,7 @@ func (s *Server) registerTools() {
 	s.mcpServer.AddTool(traceGraphTool, s.handleTraceGraph)
 
 	refsReadersTool := mcp.NewTool("grepai_refs_readers",
-		mcp.WithDescription("Find readers of a property/state symbol (non-call data usage such as store.uid reads)."),
+		mcp.WithDescription("Find readers of a property/state symbol (non-call data usage such as store.uid reads).\n\nProperty refs are extracted from JavaScript/TypeScript files only; in other languages the result is always empty — that does not mean the property is unused."),
 		mcp.WithString("symbol",
 			mcp.Required(),
 			mcp.Description("Property/state symbol name to find readers for"),
@@ -306,7 +306,7 @@ func (s *Server) registerTools() {
 	s.mcpServer.AddTool(refsReadersTool, s.handleRefsReaders)
 
 	refsWritersTool := mcp.NewTool("grepai_refs_writers",
-		mcp.WithDescription("Find writers of a property/state symbol (non-call data usage such as this.uid = ...)."),
+		mcp.WithDescription("Find writers of a property/state symbol (non-call data usage such as this.uid = ...).\n\nProperty refs are extracted from JavaScript/TypeScript files only; in other languages the result is always empty — that does not mean the property is never written."),
 		mcp.WithString("symbol",
 			mcp.Required(),
 			mcp.Description("Property/state symbol name to find writers for"),
@@ -328,7 +328,7 @@ func (s *Server) registerTools() {
 	s.mcpServer.AddTool(refsWritersTool, s.handleRefsWriters)
 
 	refsGraphTool := mcp.NewTool("grepai_refs_graph",
-		mcp.WithDescription("Build a property/state usage graph for a symbol by combining readers and writers."),
+		mcp.WithDescription("Build a property/state usage graph for a symbol by combining readers and writers.\n\nProperty refs are extracted from JavaScript/TypeScript files only; in other languages the result is always empty."),
 		mcp.WithString("symbol",
 			mcp.Required(),
 			mcp.Description("Property/state symbol name to build graph for"),
@@ -351,7 +351,7 @@ func (s *Server) registerTools() {
 
 	// grepai_index_status tool
 	indexStatusTool := mcp.NewTool("grepai_index_status",
-		mcp.WithDescription("Check the health and status of the grepai index. Returns statistics about indexed files, chunks, and configuration."),
+		mcp.WithDescription("Check the health and status of the grepai index. Returns statistics about indexed files, chunks, and configuration.\n\nGate fields: 'symbols_ready' must be true for the trace/refs tools and 'rpg_enabled' for the RPG tools — check them before blaming a query or falling back to grep."),
 		mcp.WithBoolean("verbose", mcp.Description("Include additional debug details when available (optional).")),
 		mcp.WithString("format",
 			mcp.Description("Output format: 'json' (default) or 'toon' (token-efficient)"),
@@ -386,7 +386,7 @@ func (s *Server) registerTools() {
 
 	// grepai_rpg_search tool
 	rpgSearchTool := mcp.NewTool("grepai_rpg_search",
-		mcp.WithDescription("Search RPG nodes using Jaccard-based semantic matching with scope and kind filtering."),
+		mcp.WithDescription("Search RPG nodes by word-overlap (Jaccard) between the query and feature/symbol names: use the LITERAL words of the feature or area — synonyms and paraphrases score zero. This is the entry point into the RPG graph: every result carries the node_id required by grepai_rpg_fetch and grepai_rpg_explore. kinds defaults to 'symbol'; request 'file', 'subcategory' or 'area' to browse structure."),
 		mcp.WithString("query",
 			mcp.Required(),
 			mcp.Description("Natural language or feature query to search for"),
@@ -414,7 +414,7 @@ func (s *Server) registerTools() {
 
 	// grepai_rpg_fetch tool
 	rpgFetchTool := mcp.NewTool("grepai_rpg_fetch",
-		mcp.WithDescription("Fetch detailed information about a specific RPG node including hierarchy, edges, and context."),
+		mcp.WithDescription("Fetch detailed information about a specific RPG node including hierarchy, edges, and context.\n\nnode_id values come from grepai_rpg_search or grepai_rpg_explore results — they are not guessable."),
 		mcp.WithString("node_id",
 			mcp.Required(),
 			mcp.Description("Node ID to fetch (e.g., 'sym:main.go:HandleRequest')"),
@@ -433,7 +433,7 @@ func (s *Server) registerTools() {
 
 	// grepai_rpg_explore tool
 	rpgExploreTool := mcp.NewTool("grepai_rpg_explore",
-		mcp.WithDescription("Explore the RPG graph using BFS traversal from a starting node with configurable depth and edge type filtering."),
+		mcp.WithDescription("Explore the RPG graph using BFS traversal from a starting node with configurable depth and edge type filtering.\n\nstart_node_id values come from grepai_rpg_search or earlier explore results — they are not guessable."),
 		mcp.WithString("start_node_id",
 			mcp.Required(),
 			mcp.Description("Starting node ID for graph traversal"),
