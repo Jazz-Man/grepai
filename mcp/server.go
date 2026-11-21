@@ -352,7 +352,6 @@ func (s *Server) registerTools() {
 	// grepai_index_status tool
 	indexStatusTool := mcp.NewTool("grepai_index_status",
 		mcp.WithDescription("Check the health and status of the grepai index. Returns statistics about indexed files, chunks, and configuration.\n\nGate fields: 'symbols_ready' must be true for the trace/refs tools and 'rpg_enabled' for the RPG tools — check them before blaming a query or falling back to grep."),
-		mcp.WithBoolean("verbose", mcp.Description("Include additional debug details when available (optional).")),
 		mcp.WithString("format",
 			mcp.Description("Output format: 'json' (default) or 'toon' (token-efficient)"),
 		),

@@ -249,18 +249,21 @@ func TestRegisterTools_IndexStatusSchema(t *testing.T) {
 		t.Fatalf("expected schema type object, got %q", schema.Type)
 	}
 
-	prop, ok := schema.Properties["verbose"]
+	// verbose was removed (declared but never read by the handler — pinned by
+	// TestIndexStatusSchema_HasNoVerboseParam); use "format" as the sample
+	// property proving the schema is populated.
+	prop, ok := schema.Properties["format"]
 	if !ok {
-		t.Fatalf("expected verbose property in schema")
+		t.Fatalf("expected format property in schema")
 	}
 
 	propMap, ok := prop.(map[string]any)
 	if !ok {
-		t.Fatalf("verbose property is not an object, got %T", prop)
+		t.Fatalf("format property is not an object, got %T", prop)
 	}
 
-	if propMap["type"] != "boolean" {
-		t.Fatalf("expected verbose type boolean, got %v", propMap["type"])
+	if propMap["type"] != "string" {
+		t.Fatalf("expected format type string, got %v", propMap["type"])
 	}
 }
 
