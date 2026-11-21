@@ -34,7 +34,7 @@
 					"type": "string",
 					"enum": ["fixed", "ast"],
 					"default": "fixed",
-					"description": "fixed: sliding window of size+overlap. ast: cAST recursive split-then-merge respecting syntax trees; covers .go .js .jsx .ts .tsx .py .zig, every other file falls back to fixed. Requires a build with the treesitter tag + CGO (enabled on main after the v1.1.0 release, commit 87a66ac); in builds without it, logs a warning and falls back to fixed. Unknown values also fall back to fixed with a warning."
+					"description": "fixed: sliding window of size+overlap. ast: cAST recursive split-then-merge respecting syntax trees; covers .go .js .jsx .ts .tsx .py .zig .rs plus the C family (.c .h .cc .cpp .cxx .hpp .hxx), .cs, .css, .fs (F#), .html, .java, .kt, .lua, .ml (OCaml), .php, .proto, .rb, .scala, .sh/.bash/.zsh, .sql, .swift, .tf/.hcl, .toml, .ex/.exs, .elm and .yaml/.yml; every other file falls back to fixed. Requires a build with the treesitter tag + CGO (enabled on main after the v1.1.0 release, commit 87a66ac); in builds without it, logs a warning and falls back to fixed. Unknown values also fall back to fixed with a warning."
 				},
 				"custom_extensions": {
 					"type": "array",
