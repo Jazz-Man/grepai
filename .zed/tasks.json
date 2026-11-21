@@ -16,5 +16,17 @@
 		"show_command": true,
 		"tags": ["claude"],
 		"use_new_terminal": false
+	},
+	{
+		"allow_concurrent_runs": false,
+		"args": ["watch"],
+		"command": "grepai",
+		"hide": "never",
+		"label": "grepai:watch",
+		"reveal": "always",
+		"reveal_target": "dock",
+		"show_command": true,
+		"tags": ["grepai"],
+		"use_new_terminal": false
 	}
 ]
