@@ -16,6 +16,7 @@ import (
 	"github.com/smacker/go-tree-sitter/python"
 	"github.com/smacker/go-tree-sitter/typescript/tsx"
 	"github.com/smacker/go-tree-sitter/typescript/typescript"
+	"github.com/yoanbernabeu/grepai/zig"
 )
 
 // maxASTDepth bounds how many levels chunkNodes descends into oversized
@@ -52,6 +53,7 @@ func NewASTChunker(fallback *Chunker) *ASTChunker {
 			".ts":  typescript.GetLanguage(),
 			".tsx": tsx.GetLanguage(),
 			".py":  python.GetLanguage(),
+			".zig": zig.GetLanguage(),
 		},
 	}
 }

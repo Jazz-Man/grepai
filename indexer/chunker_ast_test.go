@@ -9,6 +9,67 @@ import (
 	"testing"
 )
 
+func TestASTChunker_ZigFile(t *testing.T) {
+	src := `const std = @import("std");
+
+fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+pub fn main() void {
+    const result = add(1, 2);
+    std.debug.print("{d}\n", .{result});
+}
+
+test "addition" {
+    try std.testing.expectEqual(@as(i32, 3), add(1, 2));
+}
+
+const Point = struct {
+    x: i32,
+    y: i32,
+
+    fn norm(self: Point) i32 {
+        return self.x + self.y;
+    }
+};
+`
+	ac := NewASTChunker(NewChunker(512, 50))
+	chunks := ac.ChunkWithContext("main.zig", src)
+
+	if len(chunks) == 0 {
+		t.Fatal("expected at least one chunk")
+	}
+
+	for i, c := range chunks {
+		if !strings.HasPrefix(c.Content, "File: main.zig") {
+			t.Errorf("chunk %d missing file context prefix", i)
+		}
+		if c.FilePath != "main.zig" {
+			t.Errorf("chunk %d: expected file path main.zig, got %s", i, c.FilePath)
+		}
+		if c.StartLine < 1 {
+			t.Errorf("chunk %d: invalid start line %d", i, c.StartLine)
+		}
+	}
+
+	combined := ""
+	for _, c := range chunks {
+		combined += strings.TrimPrefix(c.Content, "File: main.zig\n\n")
+	}
+	for _, want := range []string{
+		"fn add(a: i32, b: i32) i32 {",
+		"pub fn main() void {",
+		`test "addition" {`,
+		"const Point = struct {",
+		"fn norm(self: Point) i32 {",
+	} {
+		if !strings.Contains(combined, want) {
+			t.Errorf("missing %q in chunked output", want)
+		}
+	}
+}
+
 func TestASTChunker_GoFile(t *testing.T) {
 	src := `package main
 
