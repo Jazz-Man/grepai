@@ -11,11 +11,34 @@ import (
 	"strings"
 
 	sitter "github.com/smacker/go-tree-sitter"
+	"github.com/smacker/go-tree-sitter/bash"
+	"github.com/smacker/go-tree-sitter/c"
+	"github.com/smacker/go-tree-sitter/cpp"
+	"github.com/smacker/go-tree-sitter/csharp"
+	"github.com/smacker/go-tree-sitter/css"
+	"github.com/smacker/go-tree-sitter/elixir"
+	"github.com/smacker/go-tree-sitter/elm"
 	"github.com/smacker/go-tree-sitter/golang"
+	"github.com/smacker/go-tree-sitter/hcl"
+	"github.com/smacker/go-tree-sitter/html"
+	"github.com/smacker/go-tree-sitter/java"
 	"github.com/smacker/go-tree-sitter/javascript"
+	"github.com/smacker/go-tree-sitter/kotlin"
+	"github.com/smacker/go-tree-sitter/lua"
+	"github.com/smacker/go-tree-sitter/ocaml"
+	"github.com/smacker/go-tree-sitter/php"
+	"github.com/smacker/go-tree-sitter/protobuf"
 	"github.com/smacker/go-tree-sitter/python"
+	"github.com/smacker/go-tree-sitter/ruby"
+	"github.com/smacker/go-tree-sitter/rust"
+	"github.com/smacker/go-tree-sitter/scala"
+	"github.com/smacker/go-tree-sitter/sql"
+	"github.com/smacker/go-tree-sitter/swift"
+	"github.com/smacker/go-tree-sitter/toml"
 	"github.com/smacker/go-tree-sitter/typescript/tsx"
 	"github.com/smacker/go-tree-sitter/typescript/typescript"
+	"github.com/smacker/go-tree-sitter/yaml"
+	"github.com/yoanbernabeu/grepai/fsharp"
 	"github.com/yoanbernabeu/grepai/zig"
 )
 
@@ -47,13 +70,46 @@ func NewASTChunker(fallback *Chunker) *ASTChunker {
 		maxSize:  fallback.ChunkSize() * CharsPerToken,
 		fallback: fallback,
 		languages: map[string]*sitter.Language{
-			".go":  golang.GetLanguage(),
-			".js":  javascript.GetLanguage(),
-			".jsx": javascript.GetLanguage(),
-			".ts":  typescript.GetLanguage(),
-			".tsx": tsx.GetLanguage(),
-			".py":  python.GetLanguage(),
-			".zig": zig.GetLanguage(),
+			".bash":  bash.GetLanguage(),
+			".c":     c.GetLanguage(),
+			".cc":    cpp.GetLanguage(),
+			".cpp":   cpp.GetLanguage(),
+			".cs":    csharp.GetLanguage(),
+			".css":   css.GetLanguage(),
+			".cxx":   cpp.GetLanguage(),
+			".elm":   elm.GetLanguage(),
+			".ex":    elixir.GetLanguage(),
+			".exs":   elixir.GetLanguage(),
+			".fs":    fsharp.GetLanguage(),
+			".go":    golang.GetLanguage(),
+			".h":     c.GetLanguage(),
+			".hcl":   hcl.GetLanguage(),
+			".hpp":   cpp.GetLanguage(),
+			".html":  html.GetLanguage(),
+			".hxx":   cpp.GetLanguage(),
+			".java":  java.GetLanguage(),
+			".js":    javascript.GetLanguage(),
+			".jsx":   javascript.GetLanguage(),
+			".kt":    kotlin.GetLanguage(),
+			".lua":   lua.GetLanguage(),
+			".ml":    ocaml.GetLanguage(),
+			".php":   php.GetLanguage(),
+			".proto": protobuf.GetLanguage(),
+			".py":    python.GetLanguage(),
+			".rb":    ruby.GetLanguage(),
+			".rs":    rust.GetLanguage(),
+			".scala": scala.GetLanguage(),
+			".sh":    bash.GetLanguage(),
+			".sql":   sql.GetLanguage(),
+			".swift": swift.GetLanguage(),
+			".tf":    hcl.GetLanguage(),
+			".toml":  toml.GetLanguage(),
+			".ts":    typescript.GetLanguage(),
+			".tsx":   tsx.GetLanguage(),
+			".yaml":  yaml.GetLanguage(),
+			".yml":   yaml.GetLanguage(),
+			".zsh":   bash.GetLanguage(),
+			".zig":   zig.GetLanguage(),
 		},
 	}
 }

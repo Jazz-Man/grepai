@@ -70,6 +70,395 @@ const Point = struct {
 	}
 }
 
+func TestASTChunker_RustFile(t *testing.T) {
+	src := `use std::collections::HashMap;
+
+fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+pub fn main() {
+    let result = add(1, 2);
+    println!("{}", result);
+}
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+impl Point {
+    fn norm(&self) -> i32 {
+        self.x + self.y
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn addition() {
+        assert_eq!(add(1, 2), 3);
+    }
+}
+`
+	ac := NewASTChunker(NewChunker(512, 50))
+	chunks := ac.ChunkWithContext("main.rs", src)
+
+	if len(chunks) == 0 {
+		t.Fatal("expected at least one chunk")
+	}
+
+	for i, c := range chunks {
+		if !strings.HasPrefix(c.Content, "File: main.rs") {
+			t.Errorf("chunk %d missing file context prefix", i)
+		}
+		if c.FilePath != "main.rs" {
+			t.Errorf("chunk %d: expected file path main.rs, got %s", i, c.FilePath)
+		}
+		if c.StartLine < 1 {
+			t.Errorf("chunk %d: invalid start line %d", i, c.StartLine)
+		}
+	}
+
+	combined := ""
+	for _, c := range chunks {
+		combined += strings.TrimPrefix(c.Content, "File: main.rs\n\n")
+	}
+	for _, want := range []string{
+		"fn add(a: i32, b: i32) -> i32 {",
+		"pub fn main() {",
+		"struct Point {",
+		"impl Point {",
+		"fn norm(&self) -> i32 {",
+		"fn addition() {",
+	} {
+		if !strings.Contains(combined, want) {
+			t.Errorf("missing %q in chunked output", want)
+		}
+	}
+}
+
+// TestASTChunker_LanguageSuite runs a small real-code fixture through the AST
+// chunker for every grammar wired into the languages map beyond the Go/Zig/Rust
+// standalone tests. Each case asserts the same reconstruction contract:
+// chunks carry the File: prefix, the file path, and reassemble the fixture
+// with the language's key constructs intact.
+func TestASTChunker_LanguageSuite(t *testing.T) {
+	cases := []struct {
+		file  string
+		src   string
+		wants []string
+	}{
+		{
+			file: "page.html",
+			src: `<!DOCTYPE html>
+<html>
+<head><title>demo</title></head>
+<body>
+  <nav id="main">
+    <a href="/one">one</a>
+    <a href="/two">two</a>
+  </nav>
+  <section id="content">
+    <p>hello</p>
+  </section>
+</body>
+</html>
+`,
+			wants: []string{`<nav id="main">`, `<section id="content">`},
+		},
+		{
+			file: "style.css",
+			src: `.header {
+  color: red;
+}
+
+.body .container {
+  margin: 0 auto;
+}
+`,
+			wants: []string{".header {", ".body .container {"},
+		},
+		{
+			file: "workflow.yaml",
+			src: `name: demo
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout
+`,
+			wants: []string{"jobs:", "runs-on: ubuntu-latest"},
+		},
+		{
+			file: "config.toml",
+			src: `[server]
+port = 8080
+
+[database]
+url = "postgres://localhost/app"
+`,
+			wants: []string{"[server]", "[database]"},
+		},
+		{
+			file: "user.proto",
+			src: `syntax = "proto3";
+
+message User {
+  string name = 1;
+  int32 age = 2;
+}
+`,
+			wants: []string{"message User {"},
+		},
+		{
+			file: "main.tf",
+			src: `resource "aws_instance" "web" {
+  ami = "ami-123456"
+  count = 2
+}
+`,
+			wants: []string{`resource "aws_instance" "web" {`},
+		},
+		{
+			file: "Main.elm",
+			src: `module Main exposing (main)
+
+add : Int -> Int -> Int
+add a b =
+    a + b
+
+main =
+    add 1 2
+`,
+			wants: []string{"add : Int -> Int -> Int"},
+		},
+		{
+			file: "util.lua",
+			src: `local M = {}
+
+function M.add(a, b)
+    return a + b
+end
+
+return M
+`,
+			wants: []string{"function M.add(a, b)"},
+		},
+		{
+			file: "Main.java",
+			src: `public class Main {
+    public static int add(int a, int b) {
+        return a + b;
+    }
+}
+`,
+			wants: []string{"public class Main {", "public static int add(int a, int b) {"},
+		},
+		{
+			file: "main.c",
+			src: `#include <stdio.h>
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int main(void) {
+    printf("%d\n", add(1, 2));
+    return 0;
+}
+`,
+			wants: []string{"int add(int a, int b) {", "int main(void) {"},
+		},
+		{
+			file: "util.php",
+			src: `<?php
+
+function add(int $a, int $b): int {
+    return $a + $b;
+}
+
+class Point {
+    public int $x;
+}
+`,
+			wants: []string{"function add(int $a, int $b): int {", "class Point {"},
+		},
+		{
+			file: "run.sh",
+			src: `#!/usr/bin/env bash
+set -euo pipefail
+
+add() {
+    echo $(( $1 + $2 ))
+}
+
+add 1 2
+`,
+			wants: []string{"add() {"},
+		},
+		{
+			file: "math.ex",
+			src: `defmodule Math do
+  def add(a, b) do
+    a + b
+  end
+end
+`,
+			wants: []string{"defmodule Math do", "def add(a, b) do"},
+		},
+		{
+			file: "schema.sql",
+			src: `CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+CREATE INDEX idx_users_name ON users(name);
+`,
+			wants: []string{"CREATE TABLE users (", "CREATE INDEX idx_users_name"},
+		},
+		{
+			file: "point.rb",
+			src: `class Point
+  attr_accessor :x, :y
+
+  def norm
+    x + y
+  end
+end
+`,
+			wants: []string{"class Point", "def norm"},
+		},
+		{
+			file: "Point.swift",
+			src: `struct Point {
+    var x: Int
+    var y: Int
+
+    func norm() -> Int {
+        return x + y
+    }
+}
+
+func add(_ a: Int, _ b: Int) -> Int {
+    return a + b
+}
+`,
+			wants: []string{"struct Point {", "func add(_ a: Int, _ b: Int) -> Int {"},
+		},
+		{
+			file: "point.cpp",
+			src: `#include <vector>
+
+class Point {
+public:
+    int x;
+    int norm();
+};
+
+int Point::norm() { return x; }
+`,
+			wants: []string{"class Point {", "int Point::norm()"},
+		},
+		{
+			file: "Main.scala",
+			src: `object Main {
+  def add(a: Int, b: Int): Int = a + b
+
+  def main(args: Array[String]): Unit =
+    println(add(1, 2))
+}
+`,
+			wants: []string{"object Main {", "def add(a: Int, b: Int): Int = a + b"},
+		},
+		{
+			file: "Point.kt",
+			src: `data class Point(val x: Int, val y: Int)
+
+fun add(a: Int, b: Int): Int {
+    return a + b
+}
+`,
+			wants: []string{"data class Point(", "fun add(a: Int, b: Int): Int {"},
+		},
+		{
+			file: "util.ml",
+			src: `let add a b = a + b
+
+let () =
+  print_int (add 1 2);
+  print_newline ()
+`,
+			wants: []string{"let add a b = a + b"},
+		},
+		{
+			file: "Util.fs",
+			src: `module Util
+
+let add a b = a + b
+
+type Point =
+    { X: int
+      Y: int }
+
+let norm (p: Point) = p.X + p.Y
+`,
+			wants: []string{"let add a b = a + b", "type Point ="},
+		},
+		{
+			file: "Point.cs",
+			src: `using System;
+
+namespace Demo {
+    public class Point {
+        public int X { get; set; }
+
+        public int Norm() {
+            return X;
+        }
+    }
+}
+`,
+			wants: []string{"public class Point {", "public int Norm() {"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.file, func(t *testing.T) {
+			ac := NewASTChunker(NewChunker(512, 50))
+			chunks := ac.ChunkWithContext(tc.file, tc.src)
+
+			if len(chunks) == 0 {
+				t.Fatal("expected at least one chunk")
+			}
+
+			prefix := "File: " + tc.file
+			combined := ""
+			for i, c := range chunks {
+				if !strings.HasPrefix(c.Content, prefix) {
+					t.Errorf("chunk %d missing file context prefix", i)
+				}
+				if c.FilePath != tc.file {
+					t.Errorf("chunk %d: expected file path %s, got %s", i, tc.file, c.FilePath)
+				}
+				if c.StartLine < 1 {
+					t.Errorf("chunk %d: invalid start line %d", i, c.StartLine)
+				}
+				combined += strings.TrimPrefix(c.Content, prefix+"\n\n")
+			}
+
+			for _, want := range tc.wants {
+				if !strings.Contains(combined, want) {
+					t.Errorf("missing %q in chunked output", want)
+				}
+			}
+		})
+	}
+}
+
 func TestASTChunker_GoFile(t *testing.T) {
 	src := `package main
 
